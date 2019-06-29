@@ -1,0 +1,160 @@
+{{ define "base" }}
+{{ $cf := .ClientFlags }}
+{{ $ds := band $cf 1 }}
+{{ $   := . }}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="description"               content="Welcome to osu!Mikoto. We are an osu! private server featuring both relax and vanilla osu!, integrated into a single server; Each style with it's own individual PP system, PP & score sorted leaderboards, fully-functioning multiplayer and spectation, and a massive dedicated community between both our osu! and discord servers."/>
+		<meta name="keywords"                  content="osu, osu private server, osu server, private server, Mikoto, relax server, osu!, flyingtuna, cookiezi, willcookie, vaxei, howlwater, mathi, pp">
+		<meta name="author"                    content="cmyui"/>
+		<meta name="theme-color"               content="#2571ea"/>
+		<meta name="color"                     content="#2571ea"/>
+
+		<meta property="og:url"                content="https://Mikoto.pw/"/>
+		<meta property="og:type"               content="website"/>
+		<meta property="og:title"              content="{{ if .TitleBar }}{{ .T .TitleBar }} - {{ end }}osu!Mikoto"/>
+		<meta property="og:description"        content="Welcome to osu!Mikoto!"/> 
+		<meta property="og:image"              content="https://Mikoto.pw/static/logos/logo1.png"/>
+
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<title>{{ if .TitleBar }}{{ .T .TitleBar }} - {{ end }}Mikoto</title>
+
+		<link rel="stylesheet" type="text/css" href="/static/{{ if $ds }}dark/{{ end }}semantic.min.css?{{ unixNano }}">
+		<link rel="stylesheet" type="text/css" href="/static/ripple.css?{{ unixNano }}">
+	</head>
+	{{ if and .Context.User.Username (not (has .Context.User.Privileges 1)) }}
+		<center>
+			<div class="ui warning message">
+				{{ $.T "Your account is currently in restricted mode. You will not be able to perform certain actions, and your profile can only be seen by you and by Mikoto's staff. If you believe this was a mistake, or have waited more than 2 months since your latest offense, you may appeal using <a href='https://goo.gl/forms/qDBIMgcvpFLWCNwf2'>this form</a>." | html }}
+			</div>
+			<img src="https://namir.in/pPiQee.png" height=auto width=auto/>
+			<iframe src="https://Mikoto.pw/static/music/flowers.mp3" allow="autoplay" style="display:none" id="iframeAudio"/>
+		</center>
+	{{ else }}
+	<body {{ if $ds }} class="ds"{{ end }}>
+		{{/*
+			If we're asked to disable the hugeheading, but a KyutGrill is set, it will become the background of the page.
+			This is mainly used in user profiles, allowing users to set their profile background.
+			If we're asked to disable the hugeheading, and a KyutGrill is not set, navbar has the `dropped` class.
+		*/}}
+		<div class="ui full height main wrapper"
+			{{ if and .DisableHH .KyutGrill }}
+				style="background-image: url('{{ if .KyutGrillAbsolute }}{{ .KyutGrill }}{{ else }}/static/headers/{{ .KyutGrill }}{{ end }}');"
+			{{ else if .SolidColour }}
+				style="background-color: {{ .SolidColour }}"
+			{{ end }}>
+			{{ template "navbar" . }}
+			{{ if not .DisableHH }}
+				<div class="huge heading {{ if .HeadingOnRight }}right{{ end }} dropped"
+					style="background-image: url('{{ if .KyutGrillAbsolute }}{{ .KyutGrill }}{{ else }}/static/headers/{{ or .KyutGrill "default.jpg" }}{{ end }}');">
+					<div class="ui container">
+						<h1>{{ if .HeadingTitle }}{{ .T .HeadingTitle | html }}{{ else }}{{ .T .TitleBar }}{{ end }}</h1>
+					</div>
+				</div>
+			{{ end }}
+
+			<div class="h-container">
+				<div class="ui margined container" id="messages-container">
+				<noscript>Research has proven this website works (probably) more than 7% better if you have JavaScript enabled.</noscript>
+				{{ if .Messages }}
+						{{ range $i, $v := .Messages }}
+							<div class="ui {{ $v.Type }} message">
+								<i class="close icon"></i>
+								{{ html $v.Content }}
+							</div>
+						{{ end }}
+				{{ end }}
+				{{ $settings := systemSettings "website_maintenance" "game_maintenance" "website_global_alert" }}
+				{{ with $settings.website_global_alert.String }}
+					<div class="ui warning message">
+						{{ . | html }}
+					</div>
+				{{ end }}
+				{{ with $settings.game_maintenance.Int }}
+					<div class="ui warning message">
+						{{ $.T "Mikoto's score submission is currently in maintenance mode. You will not be able to submit scores for the time being." }}
+					</div>
+				{{ end }}
+				{{ with $settings.website_maintenance.Int }}
+					<div class="ui warning message">
+						{{ $.T "Mikoto's website is currently in maintenance mode. Only staff are able to access the full website." }}
+					</div>
+				{{ end }}
+				
+				</div>
+				{{ template "tpl" . }}
+			</div>
+
+		</div>
+
+		<div id="progress" class="waiting">
+			<dt></dt>
+			<dd></dd>
+			</div>
+		
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script>
+		$( document ).ready(function() {
+		$({property: 0}).animate({property: 105}, {
+		duration: 4000,
+		step: function() {
+		var _percent = Math.round(this.property);
+		$('#progress').css('width', _percent+"%");
+		if(_percent == 105) {
+		$("#progress").addClass("done");
+		}
+		},
+		complete: function() {
+		}
+		});
+		});
+		</script>
+
+		<div class="footer">
+			{{ .T "&copy; 2017 - %d Ripple, Mikoto, using Hanayo %s." (curryear) (version) | html }}
+			<a href="/team" title="{{ .T "Who is working on this thing?" }}"><i class="users icon"></i>{{ .T "Team" }}</a> |
+			<!--a href="/changelog" title="{{ .T "See what changed!" }}"><i class="bug icon"></i>{{ .T "Changelog" }}</a> | -->
+			<a href="https://p.datadoghq.com/sb/71577ef74-a079587e79" title="{{ .T "Mikoto's Server Status" }}"><i class="signal icon"></i>{{ .T "Status" }}</a> |
+			<div class="ui scrolling dropdown" style="margin-left: 5px;" id="language-selector">
+				{{ $lang := .Context.Language }}
+				{{ with $lang }}
+					{{ $info := languageInformationByNameShort . }}
+					<div class="text"><i class="{{ $info.CountryShort }} flag"></i>{{ $info.Name }}</div>
+				{{ else }}
+					<div class="default text">{{ .T "Language" }}</div>
+				{{ end }}
+				<i class="dropdown icon"></i>
+				<div class="menu">
+					{{ range languageInformation }}
+						<div class="{{ if eq .NameShort $lang }}selected {{ end }}item" data-lang="{{ .NameShort }}"><i class="{{ .CountryShort }} flag"></i>{{ .Name }}</div>
+					{{ end }}
+				</div>
+			</div>
+		</div>
+		<script>
+			var hanayoConf = {
+				avatars:   {{ .Conf.AvatarURL }},
+				banchoAPI: {{ .Conf.BanchoAPI }},
+				baseAPI:   {{ .Conf.BaseAPIPublic }},
+				language:  {{ with $lang }}{{ . }}{{ else }}"en"{{ end }},
+			};
+			var currentUserID = {{ .Context.User.ID }};
+		</script>
+		{{/* If we got some more scripts to print, print'em */}}
+		<script src="//twemoji.maxcdn.com/2/twemoji.min.js?2.2"></script>
+		<script src="/static/dist.min.js?{{ unixNano }}"></script>
+		{{ with $lang }}
+			<script src="/static/timeago-locale/jquery.timeago.{{ . }}.js"></script>
+		{{ end }}
+		{{ if .Scripts }}
+			{{ range .Scripts }}
+				<script src="{{ . }}?{{ unixNano }}"></script>
+			{{ end }}
+		{{ end }}
+	</body>
+	{{ end }}
+</html>
+{{ end }}

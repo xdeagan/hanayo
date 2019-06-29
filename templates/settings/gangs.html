@@ -1,0 +1,43 @@
+{{/*###
+    Handler=/gangsettings
+    TitleBar=Gang Settings
+    KyutGrill=settings2.jpg
+    Include=menu.html
+    MinPrivileges=2
+    */}}
+    {{ define "tpl" }}
+    <div class="ui container">
+        <div class="ui stackable grid">
+            {{ template "settingsSidebar" . }}
+            <div class="twelve wide column">
+                <div class="ui segment">
+                    <form class="ui form" method="post">
+                        <h3 class="ui header">{{ .T "General" }}</h3>
+                        <div class="field">
+                            <label><a href="/gangsettings/name">Gang Name</a></label>
+                            <input type="text" value="Place Holder" disabled>
+                        </div>
+                        <div class="field">
+                            <label>
+                                <a href="/gangsettings/tag">Gang Tag</a>
+                            </label>
+                            <input type="text" value="Place Holder" placeholder="Place Holder" required disabled>
+                        </div>
+                        <div class="field">
+                            <label>{{ .T "Gang's Favourite mode" }}</label>
+                            <select class="ui dropdown" name="favourite_mode" data-cast="int">
+
+                            </select>
+                        </div>
+                        <div class="ui divider"></div>
+                        <div style="text-align: right">
+                            <button type="submit" class="ui blue button">{{ .T "Save" }}</button>
+                        </div>
+                        {{ ieForm .Gin }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+    
